@@ -8,8 +8,6 @@ class ClerkAuthentication(BaseAuthentication):
     def authenticate(self, request):
         auth_header = request.headers.get("Authorization")
 
-        print("HEADER:", auth_header)
-
         if not auth_header:
             return None
 
@@ -21,10 +19,9 @@ class ClerkAuthentication(BaseAuthentication):
 
             token = parts[1]
 
-            # ✅ decode WITHOUT verification
             payload = jwt.decode(token, options={"verify_signature": False})
 
-            print("PAYLOAD:", payload)
+
 
             clerk_id = payload.get("sub")
 

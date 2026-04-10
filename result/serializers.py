@@ -16,7 +16,7 @@ class ResultSerializer(serializers.ModelSerializer):
         assignment = data.get('assignment_marks', 0)
         finalterm = data.get('finalterm_marks', 0)
 
-        data['total_marks'] = (((midterm*course.midterm_weightage)/100)+((quiz*course.quiz_weightage)/100)+((assignment*course.assignment_weight)/100)+((finalterm*course.finalterm_weightage)/100))
+        data['total_marks'] = (((midterm*course.midterm_weightage)/50)+((quiz*course.quiz_weightage)/20)+((assignment*course.assignment_weight)/20)+((finalterm*course.finalterm_weightage)/100))
 
         return data
 

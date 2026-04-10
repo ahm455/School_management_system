@@ -13,7 +13,6 @@ class User(CreateUpdateTime,AbstractUser):
     role=models.CharField(choices=RolesChoices,max_length=10,default=RolesChoices.STUDENT)
     date_of_birth=models.DateField(null=True)
     date_joined=models.DateField(null=True)
-    education=models.CharField(max_length=10,choices=EducationChoices,null=True)
 
     def __str__(self):
         return f"{self.full_name}({self.date_joined})"

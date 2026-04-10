@@ -102,7 +102,6 @@ CLERK_AUDIENCE = None
 CLERK_DOMAIN = config("CLERK_DOMAIN")
 CLERK_FRONTEND_API = config("CLERK_FRONTEND_API")
 CLERK_API_KEY = config("CLERK_API_KEY")
-# CLERK_JWT_KEY = config("CLERK_JWT_KEY")
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
