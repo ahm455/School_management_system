@@ -5,6 +5,11 @@ class AttentanceChoices(models.TextChoices):
     PRESENT = "PRES", _("Present")
     ABSENT = "ABS", _("Absent")
 
+class RolesChoices(models.TextChoices):
+    TEACHER = "TEACHER", _("Teacher")
+    STUDENT= "STUDENT", _("Student")
+    HEADMASTER = "HEADMASTER", _("Headmaster")
+
 class ResultChoices(models.TextChoices):
     PASS = "PASS", _("Pass")
     FAIL = "FAIL", _("Fail")

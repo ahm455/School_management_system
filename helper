@@ -1,0 +1,3 @@
+curl -X POST https://api.clerk.dev/v1/sessions/sess_3C9s88uetpxggBOWlHcPNrBo2ms/tokens/django \
+  -H "Authorization: Bearer sk_test_MkuYTgnSN16t0p8EQ1m5NvT1D0dywxH7XTWwBzIQPl" \
+  -H "Content-Type: application/json"

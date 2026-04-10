@@ -11,18 +11,17 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+from decouple import Config, RepositoryEnv
 
-import courses
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Load environment variables from .env
+env_path = os.path.join(BASE_DIR, '.env')
+config = Config(RepositoryEnv(env_path))
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-2o*e^q+96w+!iour%1-6@ns$!%j#+qr7ln^=+io+vq*yidvzc!'
+# Security settings
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -58,6 +57,8 @@ MIDDLEWARE = [
 AUTH_USER_MODEL = 'accounts.User'
 ROOT_URLCONF = 'school_management.urls'
 
+
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -82,11 +83,26 @@ WSGI_APPLICATION = 'school_management.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': config('DB_ENGINE'),
+        'NAME': config('DB_NAME'),
+        'USER': config('DB_USER'),
+        'PASSWORD': config('DB_PASSWORD'),
+        'HOST': config('DB_HOST'),
+        'PORT': config('DB_PORT'),
     }
 }
 
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "accounts.authentication.auth.ClerkAuthentication",
+    ),
+}
+
+CLERK_AUDIENCE = None
+CLERK_DOMAIN = config("CLERK_DOMAIN")
+CLERK_FRONTEND_API = config("CLERK_FRONTEND_API")
+CLERK_API_KEY = config("CLERK_API_KEY")
+# CLERK_JWT_KEY = config("CLERK_JWT_KEY")
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators

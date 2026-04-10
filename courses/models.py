@@ -1,8 +1,8 @@
 from django.db import models
 from accounts.common import CreateUpdateTime
 from accounts.models import User
-from accounts.constants import SemesterChoices,StatusChoices
-from django.core.exceptions import ValidationError
+from accounts.constants import SemesterChoices,StatusChoices,RolesChoices
+
 
 class Course(CreateUpdateTime):
     name = models.CharField()
@@ -18,9 +18,9 @@ class Course(CreateUpdateTime):
 
 
 class Enrollment(CreateUpdateTime):
-    student = models.ForeignKey(User, on_delete=models.CASCADE,limit_choices_to={'is_student': True},related_name='student_enrollment')
-    course = models.ForeignKey(Course, on_delete=models.CASCADE,related_name='enrollment')
-    teacher = models.ForeignKey(User, on_delete=models.CASCADE,limit_choices_to={'is_teacher': True},related_name='teacher_enrollment')
+    student = models.ForeignKey(User, on_delete=models.CASCADE,limit_choices_to={'role': RolesChoices.STUDENT},related_name='student_enrollment')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE,related_name='enrollments')
+    teacher = models.ForeignKey(User, on_delete=models.CASCADE,limit_choices_to={'role': RolesChoices.TEACHER},related_name='teacher_enrollment')
 
 
     def __str__(self):
@@ -30,9 +30,9 @@ class Assignment(CreateUpdateTime):
     name=models.CharField()
     description = models.TextField()
     status=models.CharField(choices=StatusChoices,max_length=10,null=True)
-    student = models.ForeignKey(User, on_delete=models.CASCADE,limit_choices_to={'is_student': True},related_name='assign_student')
+    student = models.ForeignKey(User, on_delete=models.CASCADE,limit_choices_to={'role': RolesChoices.STUDENT},related_name='assign_student')
     course = models.ForeignKey(Course, on_delete=models.CASCADE,related_name='assignment')
-    teacher = models.ForeignKey(User, on_delete=models.CASCADE,limit_choices_to={'is_teacher': True},related_name='assign_teacher')
+    teacher = models.ForeignKey(User, on_delete=models.CASCADE,limit_choices_to={'role': RolesChoices.TEACHER},related_name='assign_teacher')
     deadline = models.DateField()
 
     def __str__(self):
