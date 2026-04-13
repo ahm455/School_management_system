@@ -1,6 +1,6 @@
-from django.shortcuts import render
 
-from accounts.permissions import AccountPermission
+from rest_framework.exceptions import PermissionDenied
+
 from attendance.models import Attendance
 from attendance.serializers import AttendanceSerializer
 from rest_framework import generics
@@ -18,9 +18,21 @@ class AttendanceCreateList(generics.ListCreateAPIView):
         if role == RolesChoices.STUDENT:
             return Attendance.objects.filter(student=user)
         elif role == RolesChoices.TEACHER:
-            return Attendance.objects.filter(teacher=user)
+            return Attendance.objects.filter(course__teachers__teacher=user).distinct()
         return Attendance.objects.all()
 
+    def perform_create(self, serializer):
+        user = self.request.user
+        course = serializer.validated_data.get("course")
+        student = serializer.validated_data.get("student")
+
+        if not course.teachers.filter(teacher=user).exists():
+            raise PermissionDenied("Not your course")
+
+        if not course.enrollments.filter(student=student).exists():
+            raise PermissionDenied("Student not enrolled in this course")
+
+        serializer.save()
 class AttendanceRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
     queryset = Attendance.objects.all()
     lookup_url_kwarg = 'Attendance_id'
@@ -33,5 +45,5 @@ class AttendanceRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
         if role == RolesChoices.STUDENT:
             return Attendance.objects.filter(student=user)
         elif role == RolesChoices.TEACHER:
-            return Attendance.objects.filter(teacher=user)
+            return Attendance.objects.filter(course__teachers__teacher=user).distinct()
         return Attendance.objects.all()

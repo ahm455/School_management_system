@@ -1,15 +1,20 @@
 from django.shortcuts import render
-from rest_framework.permissions import AllowAny
-
+from rest_framework.exceptions import PermissionDenied
 from accounts.models import User
 from accounts.serializers import UserSerializer
 from rest_framework import generics
-from .permissions import *
+from .permissions import AccountPermission
+from accounts.constants import RolesChoices
 
 class UserCreateList(generics.ListCreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [AccountPermission]
+
+    def perform_create(self, serializer):
+        if self.request.user.role != RolesChoices.HEADMASTER:
+            raise PermissionDenied("Only headmaster can create users")
+        serializer.save()
 
     def get_queryset(self):
         user = self.request.user

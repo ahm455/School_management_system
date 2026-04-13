@@ -1,21 +1,43 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 from accounts.constants import RolesChoices
+from courses.models import CourseTeacher
+from datetime import date
+
 
 class AttendancePermission(BasePermission):
 
     def has_permission(self, request, view):
-        if not request.user or not request.user.is_authenticated:
+        user = request.user
+        role = getattr(user, 'role', None)
+
+        if not user or not user.is_authenticated:
             return False
-        if request.method in SAFE_METHODS:
-            return True
-        return getattr(request.user, 'role', None) == RolesChoices.TEACHER
+
+        if request.method == "POST":
+            return role == RolesChoices.TEACHER
+
+        return True
 
     def has_object_permission(self, request, view, obj):
-        if not request.user or not request.user.is_authenticated:
-            return False
-        role = getattr(request.user, 'role', None)
+        user = request.user
+        role = getattr(user, 'role', None)
+        course = obj.course
+
         if role == RolesChoices.STUDENT:
-            return obj.student == request.user
+            return obj.student == user and request.method in SAFE_METHODS
+
+        if role == RolesChoices.HEADMASTER:
+            return request.method in SAFE_METHODS
+
         if role == RolesChoices.TEACHER:
-            return obj.teacher == request.user
-        return request.method in SAFE_METHODS
+            is_teacher = CourseTeacher.objects.filter(teacher=user,course=course).exists()
+
+            if not is_teacher:
+                return False
+
+            if obj.date != date.today():
+                return request.method in SAFE_METHODS
+
+            return True
+
+        return False
