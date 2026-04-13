@@ -1,8 +1,8 @@
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 from accounts.models import User
-import jwt  # PyJWT
 
+from .clerk import verify_clerk_token
 
 class ClerkAuthentication(BaseAuthentication):
     def authenticate(self, request):
@@ -19,9 +19,10 @@ class ClerkAuthentication(BaseAuthentication):
 
             token = parts[1]
 
-            payload = jwt.decode(token, options={"verify_signature": False})
+            payload = verify_clerk_token(token)
 
-
+            if payload is None:
+                raise AuthenticationFailed("Invalid or tampered token")
 
             clerk_id = payload.get("sub")
 
@@ -36,16 +37,11 @@ class ClerkAuthentication(BaseAuthentication):
                 }
             )
 
-            return (user, None)
+            return user, None
 
         except Exception as e:
             print("❌ AUTH ERROR:", str(e))
-            raise AuthenticationFailed("Invalid Clerk token")
-
-
-
-
-
+            raise AuthenticationFailed("Authentication failed")
         
 # curl https://api.clerk.dev/v1/sessions \
 #   -X POST \
