@@ -13,6 +13,9 @@ class Course(CreateUpdateTime):
     assignment_weight=models.FloatField(null=True)
     finalterm_weightage=models.FloatField(null=True)
 
+    class Meta:
+        unique_together = ('name','code')
+
     def __str__(self):
         return f"{self.name}"
 
@@ -22,6 +25,8 @@ class Enrollment(CreateUpdateTime):
     course = models.ForeignKey(Course, on_delete=models.CASCADE,related_name='enrollments')
     teacher = models.ForeignKey(User, on_delete=models.CASCADE,limit_choices_to={'role': RolesChoices.TEACHER},related_name='teacher_enrollment')
 
+    class Meta:
+        unique_together = ('student','course')
 
     def __str__(self):
         return f"{self.teacher} {self.course}"
@@ -34,6 +39,9 @@ class Assignment(CreateUpdateTime):
     course = models.ForeignKey(Course, on_delete=models.CASCADE,related_name='assignment')
     teacher = models.ForeignKey(User, on_delete=models.CASCADE,limit_choices_to={'role': RolesChoices.TEACHER},related_name='assign_teacher')
     deadline = models.DateField()
+
+    class Meta:
+        unique_together = ('student','course','name')
 
     def __str__(self):
         return f"{self.student}({self.course}): {self.status}"

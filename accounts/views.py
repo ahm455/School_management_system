@@ -18,8 +18,6 @@ class UserCreateList(generics.ListCreateAPIView):
             return User.objects.all()
         return User.objects.filter(id=user.id)
 
-
-
 class UserRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
     queryset = User.objects.all()
     lookup_url_kwarg = 'user_id'
