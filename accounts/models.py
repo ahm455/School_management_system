@@ -7,7 +7,7 @@ from .constants import EducationChoices,SemesterChoices,RolesChoices
 class User(CreateUpdateTime,AbstractUser):
     clerk_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
     full_name=models.CharField(max_length=20)
-    semester = models.CharField(max_length=10,choices=SemesterChoices,blank=True)
+    semester = models.CharField(max_length=10,choices=SemesterChoices,blank=True, null=True)
     email=models.EmailField(max_length=50,unique=True)
     phone_number=models.CharField(max_length=11,unique=True)
     role=models.CharField(choices=RolesChoices,max_length=10,default=RolesChoices.STUDENT)

@@ -7,8 +7,7 @@ from accounts.constants import *
 class Attendance(CreateUpdateTime):
     date = models.DateField(auto_now_add=True)
     course=models.ForeignKey(Course,on_delete=models.CASCADE,related_name='attendance')
-    teacher = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'role': RolesChoices.TEACHER},related_name='student_attendance')
-    student = models.ForeignKey(User, on_delete=models.CASCADE,limit_choices_to={'role': RolesChoices.STUDENT},related_name='teacher_attendance')
+    student = models.ForeignKey(User, on_delete=models.CASCADE,limit_choices_to={'role': RolesChoices.STUDENT},related_name='student_attendance')
     status = models.CharField(max_length=10, choices=AttentanceChoices, default=AttentanceChoices.ABSENT)
 
     class Meta:
