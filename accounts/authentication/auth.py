@@ -29,13 +29,10 @@ class ClerkAuthentication(BaseAuthentication):
             if not clerk_id:
                 raise AuthenticationFailed("Invalid Clerk token")
 
-            user, _ = User.objects.get_or_create(
-                clerk_id=clerk_id,
-                defaults={
-                    "username": clerk_id,
-                    "role": "STUDENT"
-                }
-            )
+            try:
+                user = User.objects.get(clerk_id=clerk_id)
+            except User.DoesNotExist:
+                raise AuthenticationFailed("User not registered")
 
             return user, None
 
