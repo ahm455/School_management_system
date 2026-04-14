@@ -1,7 +1,6 @@
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 from accounts.models import User
-
 from .clerk import verify_clerk_token
 
 class ClerkAuthentication(BaseAuthentication):
@@ -35,6 +34,9 @@ class ClerkAuthentication(BaseAuthentication):
                 raise AuthenticationFailed("User not registered")
 
             return user, None
+
+        except AuthenticationFailed:
+            raise
 
         except Exception as e:
             print("❌ AUTH ERROR:", str(e))
