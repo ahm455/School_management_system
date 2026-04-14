@@ -1,26 +1,24 @@
 import requests
+import time
 from jose import jwt
 from jose.exceptions import JWTError, ExpiredSignatureError
-from decouple import Config , RepositoryEnv
-from school_management.settings import env_path
+from rest_framework.exceptions import AuthenticationFailed
 
-config = Config(RepositoryEnv(env_path))
+from school_management.settings import CLERK_AUDIENCE, CLERK_DOMAIN
 
-CLERK_DOMAIN = "champion-zebra-1.clerk.accounts.dev"
+
 JWKS_URL = f"https://{CLERK_DOMAIN}/.well-known/jwks.json"
-
-CLERK_AUDIENCE =  config('CLERK_FRONTEND_API')
-
 _jwks_cache = None
-
+_jwks_last_fetched = 0
 
 def get_jwks():
-    global _jwks_cache
+    global _jwks_cache, _jwks_last_fetched
 
-    if _jwks_cache is None:
-        response = requests.get(JWKS_URL)
+    if _jwks_cache is None or time.time() - _jwks_last_fetched > 3600:
+        response = requests.get(JWKS_URL, timeout=5)
         response.raise_for_status()
         _jwks_cache = response.json()
+        _jwks_last_fetched = time.time()
 
     return _jwks_cache
 
@@ -29,19 +27,24 @@ def verify_clerk_token(token):
     try:
         jwks = get_jwks()
 
-        unverified_header = jwt.get_unverified_header(token)
-        kid = unverified_header.get("kid")
+        header = jwt.get_unverified_header(token)
+        kid = header.get("kid")
 
         if not kid:
-            raise Exception("Missing 'kid' in token header")
+            raise Exception("Missing 'kid'")
 
-        key = next(
-            (k for k in jwks["keys"] if k["kid"] == kid),
-            None
-        )
+        key = next((k for k in jwks["keys"] if k["kid"] == kid), None)
+
 
         if not key:
-            raise Exception("No matching JWKS key found")
+            global _jwks_cache
+            _jwks_cache = None
+            jwks = get_jwks()
+
+            key = next((k for k in jwks["keys"] if k["kid"] == kid), None)
+
+            if not key:
+                raise Exception("No matching JWKS key found")
 
         payload = jwt.decode(
             token,
@@ -51,19 +54,21 @@ def verify_clerk_token(token):
             issuer=f"https://{CLERK_DOMAIN}",
         )
 
-        if "sub" not in payload:
-            raise Exception("Missing 'sub' in token")
-
-        if "exp" not in payload:
-            raise Exception("Missing 'exp' in token")
+        clerk_id = payload.get("sub")
+        if not clerk_id:
+            raise Exception("Missing 'sub'")
 
         return payload
 
+
     except ExpiredSignatureError:
-        return None
 
-    except JWTError:
-        return None
+        raise AuthenticationFailed("Token expired")
 
-    except Exception:
-        return None
+    except JWTError as e:
+
+        raise AuthenticationFailed(f"JWT Error: {str(e)}")
+
+    except Exception as e:
+
+        raise AuthenticationFailed(f"Unknown token error: {str(e)}")
