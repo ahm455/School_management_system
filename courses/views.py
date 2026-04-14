@@ -3,7 +3,7 @@ from rest_framework.exceptions import PermissionDenied
 
 from courses.models import *
 from courses.serializers import *
-from .permissions import CoursePermission, EnrollmentPermission, AssignmentSubmissionPermission
+from .permissions import CourseHeadmasterPermission, EnrollmentPermission, AssignmentSubmissionPermission
 from accounts.constants import RolesChoices
 
 
@@ -13,7 +13,7 @@ def get_role(user):
 
 class CourseCreateList(generics.ListCreateAPIView):
     serializer_class = CourseSerializer
-    permission_classes = [CoursePermission]
+    permission_classes = [CourseHeadmasterPermission]
 
     def get_queryset(self):
         user = self.request.user
@@ -33,7 +33,7 @@ class CourseCreateList(generics.ListCreateAPIView):
 
 class CourseRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = CourseSerializer
-    permission_classes = [CoursePermission]
+    permission_classes = [CourseHeadmasterPermission]
     lookup_url_kwarg = 'course_id'
 
     def get_queryset(self):
@@ -50,7 +50,7 @@ class CourseRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
 
 class CourseTeacherCreateList(generics.ListCreateAPIView):
     serializer_class = CourseTeacherSerializer
-    permission_classes = [CoursePermission]
+    permission_classes = [CourseHeadmasterPermission]
 
     def get_queryset(self):
         user = self.request.user
@@ -68,7 +68,7 @@ class CourseTeacherCreateList(generics.ListCreateAPIView):
 
 class CourseTeacherRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = CourseTeacherSerializer
-    permission_classes = [CoursePermission]
+    permission_classes = [CourseHeadmasterPermission]
     lookup_url_kwarg = 'course_teacher_id'
 
     def get_queryset(self):

@@ -16,3 +16,16 @@ class User(CreateUpdateTime,AbstractUser):
 
     def __str__(self):
         return f"{self.full_name}({self.date_joined})"
+
+    @property
+    def is_student(self):
+        return self.role == RolesChoices.STUDENT
+
+    @property
+    def is_teacher(self):
+        return self.role == RolesChoices.TEACHER
+
+    @property
+    def is_headmaster(self):
+        return self.role == RolesChoices.HEADMASTER
+
