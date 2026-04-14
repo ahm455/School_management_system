@@ -100,7 +100,7 @@ class EnrollmentCreateList(generics.ListCreateAPIView):
         role = get_role(user)
 
         if role == RolesChoices.STUDENT:
-            serializer.save(student=user)  # 🔒 force ownership
+            serializer.save(student=user)
         else:
             serializer.save()
 
