@@ -1,5 +1,6 @@
-from rest_framework.permissions import BasePermission, SAFE_METHODS
-from accounts.constants import RolesChoices
+from typing import cast
+from rest_framework.permissions import BasePermission
+from accounts.models import User
 
 class AccountPermission(BasePermission):
 
@@ -7,15 +8,15 @@ class AccountPermission(BasePermission):
         return bool(request.user and request.user.is_authenticated)
 
     def has_object_permission(self, request, view, obj):
-        if not request.user or not request.user.is_authenticated:
+        user = cast(User, request.user)
+
+        if not user or not user.is_authenticated:
             return False
 
-        role = getattr(request.user, 'role', None)
-
-        if role == RolesChoices.HEADMASTER:
+        if user.is_headmaster:
             return True
 
         if request.method == "DELETE":
             return False
 
-        return obj == request.user
+        return obj == user

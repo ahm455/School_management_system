@@ -1,4 +1,7 @@
 from django.db import models
+from accounts.constants import RolesChoices
+
+
 
 class CreateUpdateTime(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
@@ -6,3 +9,4 @@ class CreateUpdateTime(models.Model):
 
     class Meta:
         abstract = True
+

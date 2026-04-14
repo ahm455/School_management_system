@@ -8,11 +8,13 @@ class Course(CreateUpdateTime):
     name = models.CharField(max_length=255)
     code = models.CharField(max_length=50)
     semester = models.CharField(max_length=10, choices=SemesterChoices, null=True, blank=True)
+    teacher=models.ManyToManyField(User,through='CourseTeacher',related_name='coursesteachers')
+    student_enrolled=models.ManyToManyField(User,through='Enrollment',related_name='enrollment_courses')
     midterm_weightage = models.FloatField(default=0)
     quiz_weightage = models.FloatField(default=0)
     assignment_weightage = models.FloatField(default=0)
     finalterm_weightage = models.FloatField(default=0)
-    deadline = models.DateTimeField(null=True, blank=True)
+    result_deadline = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         unique_together = [['name','code','semester']]
@@ -22,7 +24,7 @@ class Course(CreateUpdateTime):
 
 
 class CourseTeacher(CreateUpdateTime):
-    teacher = models.ForeignKey(User,on_delete=models.CASCADE,limit_choices_to={'role': RolesChoices.TEACHER},related_name='teaching_courses')
+    teacher = models.ForeignKey(User,on_delete=models.CASCADE,limit_choices_to={'role': RolesChoices.TEACHER},related_name='teacher_courses')
     course = models.ForeignKey(Course,on_delete=models.CASCADE,related_name='teachers')
 
     class Meta:

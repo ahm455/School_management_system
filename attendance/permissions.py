@@ -1,5 +1,6 @@
+from typing import cast
 from rest_framework.permissions import BasePermission, SAFE_METHODS
-from accounts.constants import RolesChoices
+from accounts.models import User
 from courses.models import CourseTeacher
 from datetime import date
 
@@ -7,29 +8,28 @@ from datetime import date
 class AttendancePermission(BasePermission):
 
     def has_permission(self, request, view):
-        user = request.user
-        role = getattr(user, 'role', None)
+        user = cast(User, request.user)
+
 
         if not user or not user.is_authenticated:
             return False
 
         if request.method == "POST":
-            return role == RolesChoices.TEACHER
+            return user.is_teacher
 
         return True
 
     def has_object_permission(self, request, view, obj):
-        user = request.user
-        role = getattr(user, 'role', None)
+        user = cast(User, request.user)
         course = obj.course
 
-        if role == RolesChoices.STUDENT:
+        if user.is_student:
             return obj.student == user and request.method in SAFE_METHODS
 
-        if role == RolesChoices.HEADMASTER:
+        if user.is_headmaster:
             return request.method in SAFE_METHODS
 
-        if role == RolesChoices.TEACHER:
+        if user.is_teacher:
             is_teacher = CourseTeacher.objects.filter(teacher=user,course=course).exists()
 
             if not is_teacher:

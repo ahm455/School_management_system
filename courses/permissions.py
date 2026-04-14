@@ -1,30 +1,33 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 from accounts.constants import RolesChoices
+from accounts.models import User
+from typing import cast
 
 
-class CoursePermission(BasePermission):
+class CourseHeadmasterPermission(BasePermission):
 
     def has_permission(self, request, view):
         return request.user and request.user.is_authenticated
 
     def has_object_permission(self, request, view, obj):
-        role = request.user.role
+        user = cast(User, request.user)
 
         if request.method in SAFE_METHODS:
             return True
 
-        return role == RolesChoices.HEADMASTER
+        return user.is_headmaster
 
 
 
 class EnrollmentPermission(BasePermission):
 
     def has_permission(self, request, view):
+        user = cast(User, request.user)
         if not request.user or not request.user.is_authenticated:
             return False
 
         if request.method == "POST":
-            return request.user.role == RolesChoices.STUDENT
+            return user.is_student
 
         return True
 
@@ -39,36 +42,33 @@ class EnrollmentPermission(BasePermission):
 class AssignmentSubmissionPermission(BasePermission):
 
     def has_permission(self, request, view):
-        user = request.user
+        user = cast(User, request.user)
 
         if not user or not user.is_authenticated:
             return False
 
-        role = getattr(user, 'role', None)
-
-        if role == RolesChoices.HEADMASTER:
+        if user.is_headmaster:
             return request.method in SAFE_METHODS
 
-        if role == RolesChoices.STUDENT:
+        if user.is_student:
             name = view.__class__.__name__.lower()
             if "submission" in name:
                 return request.method in ["GET", "POST"]
             if "assignment" in name:
                 return request.method in SAFE_METHODS
 
-        if role == RolesChoices.TEACHER:
+        if user.is_teacher:
             return True
 
         return False
 
     def has_object_permission(self, request, view, obj):
-        user = request.user
-        role = getattr(user, 'role', None)
+        user = cast(User, request.user)
 
-        if role == RolesChoices.HEADMASTER:
+        if user.is_headmaster:
             return request.method in SAFE_METHODS
 
-        if role == RolesChoices.STUDENT:
+        if user.is_student:
             if request.method not in SAFE_METHODS:
                 return False
 
@@ -80,7 +80,7 @@ class AssignmentSubmissionPermission(BasePermission):
 
             return False
 
-        if role == RolesChoices.TEACHER:
+        if user.is_teacher:
             if hasattr(obj, "course"):
                 return obj.course.teachers.filter(teacher=user).exists()
 
