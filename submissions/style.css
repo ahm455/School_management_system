@@ -1,0 +1,218 @@
+:root {
+    --bg: #f5efe6;
+    --panel: rgba(255, 255, 255, 0.86);
+    --ink: #1f2937;
+    --muted: #5b6472;
+    --accent: #bb3e03;
+    --accent-dark: #8d2b00;
+    --line: rgba(31, 41, 55, 0.12);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Georgia, serif;
+    color: var(--ink);
+    background:
+        radial-gradient(circle at top left, rgba(187, 62, 3, 0.2), transparent 26%),
+        radial-gradient(circle at bottom right, rgba(2, 132, 199, 0.18), transparent 22%),
+        linear-gradient(135deg, #f8f3eb, var(--bg));
+}
+
+.page-shell {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 48px 20px 60px;
+}
+
+.hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    gap: 24px;
+    margin-bottom: 28px;
+}
+
+.hero.compact {
+    align-items: center;
+}
+
+.eyebrow {
+    margin: 0 0 10px;
+    color: var(--accent);
+    font-size: 0.85rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+h1 {
+    margin: 0;
+    font-size: clamp(2.2rem, 5vw, 4rem);
+    line-height: 1.05;
+    max-width: 12ch;
+}
+
+.hero-copy {
+    max-width: 60ch;
+    color: var(--muted);
+    font-size: 1.05rem;
+    line-height: 1.7;
+}
+
+.panel,
+.template-card {
+    background: var(--panel);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+}
+
+.panel {
+    padding: 28px;
+}
+
+.cv-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px 20px;
+}
+
+.field-profile,
+.field-skills,
+.field-experience,
+.field-education {
+    grid-column: 1 / -1;
+}
+
+.field-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 700;
+}
+
+.field-group input,
+.field-group textarea {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 14px 16px;
+    font: inherit;
+    background: rgba(255, 255, 255, 0.92);
+}
+
+.field-group small {
+    display: block;
+    margin-top: 8px;
+    color: var(--muted);
+}
+
+.error {
+    color: #b91c1c;
+    margin: 8px 0 0;
+}
+
+.primary-btn,
+.secondary-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    padding: 14px 24px;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.primary-btn {
+    border: 0;
+    color: white;
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    cursor: pointer;
+}
+
+.secondary-link {
+    color: var(--ink);
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.7);
+}
+
+.template-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+}
+
+.template-card {
+    padding: 22px;
+}
+
+.template-card h2 {
+    margin: 18px 0 10px;
+}
+
+.template-card p {
+    color: var(--muted);
+    line-height: 1.6;
+}
+
+.template-badge {
+    display: inline-block;
+    margin: 6px 0 14px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(17, 24, 39, 0.08);
+    color: var(--ink) !important;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.template-preview {
+    height: 180px;
+    padding: 18px;
+    border-radius: 18px;
+    background: linear-gradient(160deg, var(--accent), rgba(255, 255, 255, 0.95));
+    display: grid;
+    gap: 10px;
+}
+
+.template-preview span {
+    display: block;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.template-preview span:first-child {
+    height: 26px;
+    width: 58%;
+}
+
+.template-preview span:nth-child(2) {
+    height: 14px;
+    width: 90%;
+}
+
+.template-preview span:nth-child(3) {
+    height: 14px;
+    width: 75%;
+}
+
+@media (max-width: 700px) {
+    .hero,
+    .cv-form {
+        grid-template-columns: 1fr;
+        display: grid;
+    }
+
+    .page-shell {
+        padding-inline: 14px;
+    }
+
+    .panel {
+        padding: 18px;
+    }
+}

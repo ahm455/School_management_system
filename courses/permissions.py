@@ -1,5 +1,4 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
-from accounts.constants import RolesChoices
 from accounts.models import User
 from typing import cast
 
@@ -18,12 +17,12 @@ class CourseHeadmasterPermission(BasePermission):
         return user.is_headmaster
 
 
-
 class EnrollmentPermission(BasePermission):
 
     def has_permission(self, request, view):
         user = cast(User, request.user)
-        if not request.user or not request.user.is_authenticated:
+
+        if not user or not user.is_authenticated:
             return False
 
         if request.method == "POST":
@@ -36,8 +35,8 @@ class EnrollmentPermission(BasePermission):
         if request.method in SAFE_METHODS:
             return True
 
-
         return obj.student == request.user
+
 
 class AssignmentSubmissionPermission(BasePermission):
 
@@ -82,10 +81,10 @@ class AssignmentSubmissionPermission(BasePermission):
 
         if user.is_teacher:
             if hasattr(obj, "course"):
-                return obj.course.teachers.filter(teacher=user).exists()
+                return obj.course.teacher == user
 
             if hasattr(obj, "assignment"):
-                return obj.assignment.course.teachers.filter(teacher=user).exists()
+                return obj.assignment.course.teacher == user
 
             return False
 
