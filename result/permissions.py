@@ -1,18 +1,13 @@
 from typing import cast
-
 from django.utils.timezone import now
 from rest_framework.permissions import BasePermission, SAFE_METHODS
-
 from accounts.models import User
-from courses.models import CourseTeacher, Course
-from accounts.constants import RolesChoices
 
 
 class ResultPermission(BasePermission):
 
     def has_permission(self, request, view):
         user = cast(User, request.user)
-
 
         if not user or not user.is_authenticated:
             return False
@@ -26,21 +21,15 @@ class ResultPermission(BasePermission):
         user = cast(User, request.user)
         course = obj.course
 
-
         if user.is_student:
             return obj.student == user and request.method in SAFE_METHODS
-
 
         if user.is_headmaster:
             return request.method in SAFE_METHODS
 
         if user.is_teacher:
-
-            course_teacher = CourseTeacher.objects.filter(teacher=user,course=course).exists()
-
-            if not course_teacher:
+            if course.teacher != user:
                 return False
-
 
             if course.result_deadline and now() > course.result_deadline:
                 return request.method in SAFE_METHODS
