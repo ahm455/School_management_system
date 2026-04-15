@@ -24,14 +24,14 @@ class CourseSerializer(serializers.ModelSerializer):
 
         total_weightage = mid + quiz + assign + final
 
-        if total_weightage != 100:
+        if round(total_weightage) != 100:
             raise ValidationError(f'Total weightage is {total_weightage}, must be 100')
 
         return data
 
-class EnrollmentSerializer(serializers.ModelSerializer):
+class StudentEnrollmentSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Enrollment
+        model = StudentEnrollment
         fields = '__all__'
 
     def validate(self, data):
@@ -54,10 +54,7 @@ class AssignmentSerializer(serializers.ModelSerializer):
         model = Assignment
         fields = '__all__'
 
-class CourseTeacherSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CourseTeacher
-        fields = '__all__'
+
 
 class SubmissionSerializer(serializers.ModelSerializer):
     class Meta:
