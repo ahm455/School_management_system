@@ -1,10 +1,10 @@
-from django.shortcuts import render
+from typing import cast
 from rest_framework.exceptions import PermissionDenied
+from rest_framework import generics
 from accounts.models import User
 from accounts.serializers import UserSerializer
-from rest_framework import generics
 from .permissions import AccountPermission
-from accounts.constants import RolesChoices
+
 
 class UserCreateList(generics.ListCreateAPIView):
     queryset = User.objects.all()
@@ -12,15 +12,19 @@ class UserCreateList(generics.ListCreateAPIView):
     permission_classes = [AccountPermission]
 
     def perform_create(self, serializer):
-        if self.request.user.role != RolesChoices.HEADMASTER:
+        user = cast(User, self.request.user)
+
+        if not user.is_headmaster:
             raise PermissionDenied("Only headmaster can create users")
+
         serializer.save()
 
     def get_queryset(self):
-        user = self.request.user
-        role = getattr(user, 'role', None)
-        if role == RolesChoices.HEADMASTER:
+        user = cast(User, self.request.user)
+
+        if user.is_headmaster:
             return User.objects.all()
+
         return User.objects.filter(id=user.id)
 
 class UserRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
@@ -30,8 +34,9 @@ class UserRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [AccountPermission]
 
     def get_queryset(self):
-        user = self.request.user
-        role = getattr(user, 'role', None)
-        if role == RolesChoices.HEADMASTER:
+        user = cast(User, self.request.user)
+
+        if user.is_headmaster:
             return User.objects.all()
+
         return User.objects.filter(id=user.id)

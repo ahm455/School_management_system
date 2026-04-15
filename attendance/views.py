@@ -1,11 +1,11 @@
-
+from typing import cast
 from rest_framework.exceptions import PermissionDenied
-
+from accounts.models import User
 from attendance.models import Attendance
 from attendance.serializers import AttendanceSerializer
 from rest_framework import generics
-from accounts.constants import RolesChoices
 from .permissions import AttendancePermission
+
 
 class AttendanceCreateList(generics.ListCreateAPIView):
     queryset = Attendance.objects.all()
@@ -13,26 +13,30 @@ class AttendanceCreateList(generics.ListCreateAPIView):
     permission_classes = [AttendancePermission]
 
     def get_queryset(self):
-        user = self.request.user
-        role = getattr(user, 'role', None)
-        if role == RolesChoices.STUDENT:
+        user = cast(User, self.request.user)
+
+        if user.is_student:
             return Attendance.objects.filter(student=user)
-        elif role == RolesChoices.TEACHER:
-            return Attendance.objects.filter(course__teachers__teacher=user).distinct()
+
+        if user.is_teacher:
+            return Attendance.objects.filter(course__teacher=user)
+
         return Attendance.objects.all()
 
     def perform_create(self, serializer):
-        user = self.request.user
+        user = cast(User, self.request.user)
         course = serializer.validated_data.get("course")
         student = serializer.validated_data.get("student")
 
-        if not course.teachers.filter(teacher=user).exists():
+        if course.teacher != user:
             raise PermissionDenied("Not your course")
 
         if not course.enrollments.filter(student=student).exists():
             raise PermissionDenied("Student not enrolled in this course")
 
         serializer.save()
+
+
 class AttendanceRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
     queryset = Attendance.objects.all()
     lookup_url_kwarg = 'Attendance_id'
@@ -40,10 +44,12 @@ class AttendanceRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [AttendancePermission]
 
     def get_queryset(self):
-        user = self.request.user
-        role = getattr(user, 'role', None)
-        if role == RolesChoices.STUDENT:
+        user = cast(User, self.request.user)
+
+        if user.is_student:
             return Attendance.objects.filter(student=user)
-        elif role == RolesChoices.TEACHER:
-            return Attendance.objects.filter(course__teachers__teacher=user).distinct()
+
+        if user.is_teacher:
+            return Attendance.objects.filter(course__teacher=user)
+
         return Attendance.objects.all()
