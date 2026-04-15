@@ -1,14 +1,11 @@
+from typing import cast
 from rest_framework import generics
 from rest_framework.exceptions import PermissionDenied
-
+from accounts.models import User
 from courses.models import *
 from courses.serializers import *
 from .permissions import CourseHeadmasterPermission, EnrollmentPermission, AssignmentSubmissionPermission
-from accounts.constants import RolesChoices
-
-
-def get_role(user):
-    return getattr(user, 'role', None)
+from accounts.constants import StatusChoices
 
 
 class CourseCreateList(generics.ListCreateAPIView):
@@ -16,17 +13,19 @@ class CourseCreateList(generics.ListCreateAPIView):
     permission_classes = [CourseHeadmasterPermission]
 
     def get_queryset(self):
-        user = self.request.user
-        role = get_role(user)
+        user = cast(User, self.request.user)
 
-        if role == RolesChoices.STUDENT:
+        if user.is_student:
             return Course.objects.filter(enrollments__student=user).distinct()
-        elif role == RolesChoices.TEACHER:
-            return Course.objects.filter(teachers__teacher=user).distinct()
+
+        if user.is_teacher:
+            return Course.objects.filter(teacher=user)
+
         return Course.objects.all()
 
     def perform_create(self, serializer):
-        if get_role(self.request.user) != RolesChoices.HEADMASTER:
+        user = cast(User, self.request.user)
+        if not user.is_headmaster:
             raise PermissionDenied("Only Headmaster can create courses")
         serializer.save()
 
@@ -37,90 +36,62 @@ class CourseRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
     lookup_url_kwarg = 'course_id'
 
     def get_queryset(self):
-        user = self.request.user
-        role = get_role(user)
+        user = cast(User, self.request.user)
 
-        if role == RolesChoices.STUDENT:
+        if user.is_student:
             return Course.objects.filter(enrollments__student=user).distinct()
-        elif role == RolesChoices.TEACHER:
-            return Course.objects.filter(teachers__teacher=user).distinct()
+
+        if user.is_teacher:
+            return Course.objects.filter(teacher=user)
+
         return Course.objects.all()
 
 
-
-class CourseTeacherCreateList(generics.ListCreateAPIView):
-    serializer_class = CourseTeacherSerializer
-    permission_classes = [CourseHeadmasterPermission]
-
-    def get_queryset(self):
-        user = self.request.user
-        role = get_role(user)
-
-        if role == RolesChoices.TEACHER:
-            return CourseTeacher.objects.filter(teacher=user).distinct()
-        return CourseTeacher.objects.all()
-
-    def perform_create(self, serializer):
-        if get_role(self.request.user) != RolesChoices.HEADMASTER:
-            raise PermissionDenied("Only Headmaster can assign teachers")
-        serializer.save()
-
-
-class CourseTeacherRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
-    serializer_class = CourseTeacherSerializer
-    permission_classes = [CourseHeadmasterPermission]
-    lookup_url_kwarg = 'course_teacher_id'
-
-    def get_queryset(self):
-        user = self.request.user
-        role = get_role(user)
-
-        if role == RolesChoices.TEACHER:
-            return CourseTeacher.objects.filter(teacher=user).distinct()
-        return CourseTeacher.objects.all()
-
-
-
-class EnrollmentCreateList(generics.ListCreateAPIView):
-    serializer_class = EnrollmentSerializer
+class StudentEnrollmentCreateList(generics.ListCreateAPIView):
+    serializer_class = StudentEnrollmentSerializer
     permission_classes = [EnrollmentPermission]
 
     def get_queryset(self):
-        user = self.request.user
-        role = get_role(user)
+        user = cast(User, self.request.user)
 
-        if role == RolesChoices.STUDENT:
-            return Enrollment.objects.filter(student=user).distinct()
-        elif role == RolesChoices.TEACHER:
-            return Enrollment.objects.filter(course__teachers__teacher=user).distinct()
-        return Enrollment.objects.all()
+        if user.is_student:
+            return StudentEnrollment.objects.filter(student=user)
+
+        if user.is_teacher:
+            return StudentEnrollment.objects.filter(course__teacher=user)
+
+        return StudentEnrollment.objects.all()
 
     def perform_create(self, serializer):
-        user = self.request.user
-        role = get_role(user)
+        user = cast(User, self.request.user)
 
-        if role == RolesChoices.STUDENT:
+        if user.is_student:
             serializer.save(student=user)
-        else:
-            serializer.save()
+            return
+
+        if user.is_teacher:
+            course = serializer.validated_data.get("course")
+            if course.teacher != user:
+                raise PermissionDenied("Not your course")
+
+        serializer.save()
 
 
-class EnrollmentRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
-    serializer_class = EnrollmentSerializer
+class StudentEnrollmentRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = StudentEnrollmentSerializer
     permission_classes = [EnrollmentPermission]
     lookup_url_kwarg = 'enrollment_id'
 
     def get_queryset(self):
-        user = self.request.user
-        role = get_role(user)
+        user = cast(User, self.request.user)
 
-        if role == RolesChoices.STUDENT:
-            return Enrollment.objects.filter(student=user).distinct()
-        elif role == RolesChoices.TEACHER:
-            return Enrollment.objects.filter(course__teachers__teacher=user).distinct()
-        return Enrollment.objects.all()
+        if user.is_student:
+            return StudentEnrollment.objects.filter(student=user)
 
+        if user.is_teacher:
+            return StudentEnrollment.objects.filter(course__teacher=user)
 
+        return StudentEnrollment.objects.all()
 
 
 class AssignmentCreateList(generics.ListCreateAPIView):
@@ -128,24 +99,25 @@ class AssignmentCreateList(generics.ListCreateAPIView):
     permission_classes = [AssignmentSubmissionPermission]
 
     def get_queryset(self):
-        user = self.request.user
-        role = get_role(user)
+        user = cast(User, self.request.user)
 
-        if role == RolesChoices.STUDENT:
+        if user.is_student:
             return Assignment.objects.filter(course__enrollments__student=user).distinct()
-        elif role == RolesChoices.TEACHER:
-            return Assignment.objects.filter(course__teachers__teacher=user).distinct()
+
+        if user.is_teacher:
+            return Assignment.objects.filter(course__teacher=user)
+
         return Assignment.objects.all()
 
     def perform_create(self, serializer):
-        user = self.request.user
+        user = cast(User, self.request.user)
 
-        if user.role != RolesChoices.TEACHER:
+        if not user.is_teacher:
             raise PermissionDenied("Only teachers can create assignments")
 
         course = serializer.validated_data.get("course")
 
-        if not course.teachers.filter(teacher=user).exists():
+        if course.teacher != user:
             raise PermissionDenied("You are not assigned to this course")
 
         serializer.save()
@@ -157,15 +129,15 @@ class AssignmentRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
     lookup_url_kwarg = 'assignment_id'
 
     def get_queryset(self):
-        user = self.request.user
-        role = get_role(user)
+        user = cast(User, self.request.user)
 
-        if role == RolesChoices.STUDENT:
+        if user.is_student:
             return Assignment.objects.filter(course__enrollments__student=user).distinct()
-        elif role == RolesChoices.TEACHER:
-            return Assignment.objects.filter(course__teachers__teacher=user).distinct()
-        return Assignment.objects.all()
 
+        if user.is_teacher:
+            return Assignment.objects.filter(course__teacher=user)
+
+        return Assignment.objects.all()
 
 
 class SubmissionCreateList(generics.ListCreateAPIView):
@@ -173,20 +145,20 @@ class SubmissionCreateList(generics.ListCreateAPIView):
     permission_classes = [AssignmentSubmissionPermission]
 
     def get_queryset(self):
-        user = self.request.user
-        role = get_role(user)
+        user = cast(User, self.request.user)
 
-        if role == RolesChoices.STUDENT:
-            return Submission.objects.filter(student=user).distinct()
-        elif role == RolesChoices.TEACHER:
-            return Submission.objects.filter(assignment__course__teachers__teacher=user).distinct()
+        if user.is_student:
+            return Submission.objects.filter(student=user)
+
+        if user.is_teacher:
+            return Submission.objects.filter(assignment__course__teacher=user)
+
         return Submission.objects.all()
 
     def perform_create(self, serializer):
-        user = self.request.user
-        role = get_role(user)
+        user = cast(User, self.request.user)
 
-        if role != RolesChoices.STUDENT:
+        if not user.is_student:
             raise PermissionDenied("Only students can submit assignments")
 
         assignment = serializer.validated_data.get("assignment")
@@ -194,7 +166,7 @@ class SubmissionCreateList(generics.ListCreateAPIView):
         if not assignment.course.enrollments.filter(student=user).exists():
             raise PermissionDenied("You are not enrolled in this course")
 
-        serializer.save(student=user,status=StatusChoices.SUBMITTED)
+        serializer.save(student=user, status=StatusChoices.SUBMITTED)
 
 
 class SubmissionRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
@@ -203,24 +175,23 @@ class SubmissionRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
     lookup_url_kwarg = 'submission_id'
 
     def get_queryset(self):
-        user = self.request.user
-        role = get_role(user)
+        user = cast(User, self.request.user)
 
-        if role == RolesChoices.STUDENT:
-            return Submission.objects.filter(student=user).distinct()
-        elif role == RolesChoices.TEACHER:
-            return Submission.objects.filter(assignment__course__teachers__teacher=user).distinct()
+        if user.is_student:
+            return Submission.objects.filter(student=user)
+
+        if user.is_teacher:
+            return Submission.objects.filter(assignment__course__teacher=user)
+
         return Submission.objects.all()
 
     def perform_destroy(self, instance):
-        instance = self.get_object()
-        user = self.request.user
-        role= get_role(user)
+        user = cast(User,self.request.user)
 
-        if role != RolesChoices.TEACHER:
+        if not user.is_teacher:
             raise PermissionDenied("Only teachers can delete submissions")
 
-        if not instance.assignment.course.teachers.filter(teacher=user).exists():
+        if instance.assignment.course.teacher != user:
             raise PermissionDenied("Not your course")
 
         instance.delete()
