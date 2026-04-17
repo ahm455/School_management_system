@@ -31,9 +31,6 @@ class ResultPermission(BasePermission):
             if course.teacher != user:
                 return False
 
-            if course.result_deadline and now() > course.result_deadline:
-                return request.method in SAFE_METHODS
-
             return True
 
         return False

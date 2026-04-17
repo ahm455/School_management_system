@@ -27,7 +27,7 @@ SECRET_KEY = config('SECRET_KEY')
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Application definition
 
@@ -38,11 +38,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'accounts',
+    'accounts.apps.AccountsConfig',
     'courses',
     'result',
     'attendance',
-    'rest_framework'
+    'rest_framework',
+    'dashboard',
+    'notification',
 ]
 
 MIDDLEWARE = [
@@ -97,6 +99,9 @@ REST_FRAMEWORK = {
         "accounts.authentication.auth.ClerkAuthentication",
     ),
 }
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
 
 CLERK_AUDIENCE = None
 CLERK_DOMAIN = config("CLERK_DOMAIN")

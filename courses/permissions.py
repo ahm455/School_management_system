@@ -26,7 +26,7 @@ class EnrollmentPermission(BasePermission):
             return False
 
         if request.method == "POST":
-            return user.is_student
+            return user.is_student or user.is_headmaster
 
         return True
 

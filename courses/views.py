@@ -1,11 +1,12 @@
 from typing import cast
 from rest_framework import generics
 from rest_framework.exceptions import PermissionDenied
-from accounts.models import User
-from courses.models import *
 from courses.serializers import *
 from .permissions import CourseHeadmasterPermission, EnrollmentPermission, AssignmentSubmissionPermission
-from accounts.constants import StatusChoices
+from services.constants import StatusChoices
+from .service import get_course_analytics
+from dashboard.permissions import IsHeadmaster, IsTeacher
+from .service import grade_submission
 
 
 class CourseCreateList(generics.ListCreateAPIView):
@@ -102,7 +103,7 @@ class AssignmentCreateList(generics.ListCreateAPIView):
         user = cast(User, self.request.user)
 
         if user.is_student:
-            return Assignment.objects.filter(course__enrollments__student=user).distinct()
+            return Assignment.objects.filter(course__course_enrollments__student=user).distinct()
 
         if user.is_teacher:
             return Assignment.objects.filter(course__teacher=user)
@@ -120,7 +121,7 @@ class AssignmentCreateList(generics.ListCreateAPIView):
         if course.teacher != user:
             raise PermissionDenied("You are not assigned to this course")
 
-        serializer.save()
+        serializer.save(created_by=user)
 
 
 class AssignmentRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
@@ -163,35 +164,30 @@ class SubmissionCreateList(generics.ListCreateAPIView):
 
         assignment = serializer.validated_data.get("assignment")
 
-        if not assignment.course.enrollments.filter(student=user).exists():
+        if not assignment.course.course_enrollments.filter(student=user).exists():
             raise PermissionDenied("You are not enrolled in this course")
 
         serializer.save(student=user, status=StatusChoices.SUBMITTED)
 
-
-class SubmissionRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
-    serializer_class = SubmissionSerializer
-    permission_classes = [AssignmentSubmissionPermission]
+class AssignmentGradingView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Submission.objects.all()
+    serializer_class = GradingAssignmentSerializer
+    permission_classes = [IsTeacher]
     lookup_url_kwarg = 'submission_id'
 
     def get_queryset(self):
         user = cast(User, self.request.user)
+        return Submission.objects.filter(assignment__course__teacher=user)
 
-        if user.is_student:
-            return Submission.objects.filter(student=user)
+    def perform_update(self, serializer):
+        submission = serializer.save()
+        grade_submission(submission)
 
-        if user.is_teacher:
-            return Submission.objects.filter(assignment__course__teacher=user)
+class CourseAnalyticsView(generics.ListAPIView):
+    serializer_class = CourseAnalyticsSerializer
+    permission_classes = [IsHeadmaster]
 
-        return Submission.objects.all()
+    def get_queryset(self):
+        course_id = self.kwargs.get("course_id")
+        return [get_course_analytics(course_id)]
 
-    def perform_destroy(self, instance):
-        user = cast(User,self.request.user)
-
-        if not user.is_teacher:
-            raise PermissionDenied("Only teachers can delete submissions")
-
-        if instance.assignment.course.teacher != user:
-            raise PermissionDenied("Not your course")
-
-        instance.delete()

@@ -5,7 +5,7 @@ from accounts.models import User
 from result.models import Result
 from result.serializers import ResultSerializer
 from .permissions import ResultPermission
-
+from .service import publish_result
 
 class ResultCreateList(generics.ListCreateAPIView):
     queryset = Result.objects.all()
@@ -31,10 +31,12 @@ class ResultCreateList(generics.ListCreateAPIView):
 
         course = serializer.validated_data.get("course")
 
+
         if course.teacher != user:
             raise PermissionDenied("Not your course")
 
-        serializer.save()
+        result=serializer.save()
+        publish_result(result)
 
 
 class ResultRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):

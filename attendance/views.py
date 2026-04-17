@@ -4,7 +4,10 @@ from accounts.models import User
 from attendance.models import Attendance
 from attendance.serializers import AttendanceSerializer
 from rest_framework import generics
+
+from services.constants import AttentanceChoices
 from .permissions import AttendancePermission
+from .services import mark_absent
 
 
 class AttendanceCreateList(generics.ListCreateAPIView):
@@ -31,10 +34,13 @@ class AttendanceCreateList(generics.ListCreateAPIView):
         if course.teacher != user:
             raise PermissionDenied("Not your course")
 
-        if not course.enrollments.filter(student=student).exists():
+        if not course.course_enrollments.filter(student=student).exists():
             raise PermissionDenied("Student not enrolled in this course")
 
-        serializer.save()
+        attendance = serializer.save()
+
+        if attendance.status == AttentanceChoices.ABSENT:
+            mark_absent(attendance)
 
 
 class AttendanceRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):

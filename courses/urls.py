@@ -11,5 +11,7 @@ urlpatterns = [
     path('assignment/', AssignmentCreateList.as_view(), name='Assignment_list_create'),
     path('assignment/<int:assignment_id>/', AssignmentRetrieveUpdateDelete.as_view(), name='Assignment_detail'),
     path('submission/', SubmissionCreateList.as_view(), name='Submission_list_create'),
-    path('submission/<int:submission_id>/', SubmissionRetrieveUpdateDelete.as_view(), name='Submission_detail'),
+    path('submission/<int:submission_id>/grade',AssignmentGradingView.as_view(),name='Assignment_grade'),
+    path("<int:course_id>/analytics/", CourseAnalyticsView.as_view(),name="analytics"),
+
 ]

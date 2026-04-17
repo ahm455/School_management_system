@@ -1,9 +1,8 @@
 from django.db import models
-from accounts.common import CreateUpdateTime
-from courses.models import Course
+from services.common import CreateUpdateTime
 from accounts.models import User
 from courses.models import Course
-from accounts.constants import ResultChoices
+from services.constants import ResultChoices
 
 
 class Result(CreateUpdateTime):
@@ -16,6 +15,7 @@ class Result(CreateUpdateTime):
     finalterm_marks = models.FloatField(default=0)
     total_marks = models.FloatField(default=0)
     grade=models.CharField(max_length=5,blank=True)
+    is_published=models.BooleanField(default=False)
     remarks=models.TextField(null=True)
 
     class Meta:

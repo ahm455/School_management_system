@@ -1,20 +1,20 @@
 from django.db import models
-from accounts.common import CreateUpdateTime
+from services.common import CreateUpdateTime
 from accounts.models import User
-from accounts.constants import SemesterChoices, StatusChoices
+from services.constants import SemesterChoices, StatusChoices
 
 
 class Course(CreateUpdateTime):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=50)
     code = models.CharField(max_length=50)
-    semester = models.IntegerField(choices=SemesterChoices,blank=True, null=True)
+    semester = models.CharField(choices=SemesterChoices,blank=True, null=True)
     teacher = models.ForeignKey(User,on_delete=models.CASCADE,limit_choices_to={'is_teacher': True},related_name='teacher_courses')
     students = models.ManyToManyField(User,through='StudentEnrollment',related_name='enrollment_courses')
     midterm_weightage = models.FloatField(default=0)
     quiz_weightage = models.FloatField(default=0)
     assignment_weightage = models.FloatField(default=0)
     finalterm_weightage = models.FloatField(default=0)
-    result_deadline = models.DateTimeField(null=True, blank=True)
+    result_deadline = models.DateField(null=True, blank=True)
 
     class Meta:
         unique_together = [['name', 'code', 'semester']]
@@ -24,8 +24,8 @@ class Course(CreateUpdateTime):
 
 
 class StudentEnrollment(CreateUpdateTime):
-    student = models.ForeignKey(User,on_delete=models.CASCADE,limit_choices_to={'is_student': True},related_name='enrollments')
-    course = models.ForeignKey(Course,on_delete=models.CASCADE,related_name='enrollments')
+    student = models.ForeignKey(User,on_delete=models.CASCADE,limit_choices_to={'is_student': True},related_name='student_enrollments')
+    course = models.ForeignKey(Course,on_delete=models.CASCADE,related_name='course_enrollments')
 
     class Meta:
         unique_together = [['student', 'course']]
@@ -35,9 +35,10 @@ class StudentEnrollment(CreateUpdateTime):
 
 
 class Assignment(CreateUpdateTime):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=50)
     description = models.TextField()
     course = models.ForeignKey(Course,on_delete=models.CASCADE,related_name='assignments')
+    created_by=models.ForeignKey(User,on_delete=models.CASCADE,limit_choices_to={'is_teacher': True},related_name='Assignment_created_by')
     deadline = models.DateField()
 
     class Meta:
@@ -52,6 +53,8 @@ class Submission(CreateUpdateTime):
     assignment = models.ForeignKey(Assignment,on_delete=models.CASCADE,related_name='submissions')
     file = models.FileField(upload_to='submissions/')
     status = models.CharField(choices=StatusChoices,max_length=10,default=StatusChoices.PENDING)
+    marks= models.IntegerField(default=0)
+    graded= models.BooleanField(default=False)
 
     class Meta:
         unique_together = [['student', 'assignment']]

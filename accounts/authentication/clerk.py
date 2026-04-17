@@ -14,7 +14,7 @@ _jwks_last_fetched = 0
 def get_jwks():
     global _jwks_cache, _jwks_last_fetched
 
-    if _jwks_cache is None or time.time() - _jwks_last_fetched > 3600:
+    if _jwks_cache is None or time.time() - _jwks_last_fetched > 7200:
         response = requests.get(JWKS_URL, timeout=5)
         response.raise_for_status()
         _jwks_cache = response.json()
