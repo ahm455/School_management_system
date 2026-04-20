@@ -34,9 +34,6 @@ class AttendancePermission(BasePermission):
             if course.teacher != user:
                 return False
 
-            if obj.date != date.today():
-                return request.method in SAFE_METHODS
-
             return True
 
         return False

@@ -1,8 +1,12 @@
 from rest_framework import serializers
+from accounts.models import User
+from accounts.serializers import UserMiniSerializer
 from .models import Notification
 
 
 class NotificationSerializer(serializers.ModelSerializer):
+    user=UserMiniSerializer(read_only=True)
+    user_id = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), write_only=True)
 
     class Meta:
         model = Notification

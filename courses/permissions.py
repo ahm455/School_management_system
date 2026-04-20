@@ -75,7 +75,7 @@ class AssignmentSubmissionPermission(BasePermission):
                 return obj.student == user
 
             if hasattr(obj, "course"):
-                return obj.course.enrollments.filter(student=user).exists()
+                return obj.course.course_enrollments.filter(student=user).exists()
 
             return False
 

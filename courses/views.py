@@ -7,6 +7,7 @@ from services.constants import StatusChoices
 from .service import get_course_analytics
 from dashboard.permissions import IsHeadmaster, IsTeacher
 from .service import grade_submission
+from rest_framework.response import Response
 
 
 class CourseCreateList(generics.ListCreateAPIView):
@@ -17,7 +18,7 @@ class CourseCreateList(generics.ListCreateAPIView):
         user = cast(User, self.request.user)
 
         if user.is_student:
-            return Course.objects.filter(enrollments__student=user).distinct()
+            return Course.objects.filter(course_enrollments__student=user).distinct()
 
         if user.is_teacher:
             return Course.objects.filter(teacher=user)
@@ -116,7 +117,7 @@ class AssignmentCreateList(generics.ListCreateAPIView):
         if not user.is_teacher:
             raise PermissionDenied("Only teachers can create assignments")
 
-        course = serializer.validated_data.get("course")
+        course = serializer.validated_data.get("course_id")
 
         if course.teacher != user:
             raise PermissionDenied("You are not assigned to this course")
@@ -133,7 +134,7 @@ class AssignmentRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
         user = cast(User, self.request.user)
 
         if user.is_student:
-            return Assignment.objects.filter(course__enrollments__student=user).distinct()
+            return Assignment.objects.filter(course__course_enrollments__student=user).distinct()
 
         if user.is_teacher:
             return Assignment.objects.filter(course__teacher=user)
@@ -162,7 +163,7 @@ class SubmissionCreateList(generics.ListCreateAPIView):
         if not user.is_student:
             raise PermissionDenied("Only students can submit assignments")
 
-        assignment = serializer.validated_data.get("assignment")
+        assignment = serializer.validated_data.get("assignment_id")
 
         if not assignment.course.course_enrollments.filter(student=user).exists():
             raise PermissionDenied("You are not enrolled in this course")
@@ -187,7 +188,7 @@ class CourseAnalyticsView(generics.ListAPIView):
     serializer_class = CourseAnalyticsSerializer
     permission_classes = [IsHeadmaster]
 
-    def get_queryset(self):
+    def list(self, request, *args, **kwargs):
         course_id = self.kwargs.get("course_id")
-        return [get_course_analytics(course_id)]
+        return Response([get_course_analytics(course_id)])
 

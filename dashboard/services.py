@@ -16,7 +16,6 @@ def get_student_dashboard(user):
 
     for enrollment in enrollments:
         course = enrollment.course
-
         result = Result.objects.filter(student=user, course=course).first()
         attendance_qs = Attendance.objects.filter(student=user, course=course)
         present_classes = attendance_qs.filter(status=AttentanceChoices.PRESENT).count()
@@ -27,8 +26,13 @@ def get_student_dashboard(user):
             (present_classes / total_classes) * 100 if total_classes > 0 else 0)
 
         data.append({
+            "course_id": course.id,
             "course": course.name,
-            "marks": result.total_marks if result else None,
+            "midterm marks": result.midterm_marks if result else None,
+            "Quiz marks": result.quiz_marks if result else None,
+            "Assignment marks": result.assignment_marks if result else None,
+            "final marks": result.finalterm_marks if result else None,
+            "total marks": result.total_marks if result else None,
             "grade": result.grade if result else None,
             "attendance_percentage": round(attendance_percentage, 2),
         })
@@ -42,7 +46,8 @@ def get_teacher_dashboard(user):
 
     for course in courses:
         total_students = course.course_enrollments.count()
-        graded_students = course.result.values('course').distinct().count()
+        graded_students = course.result.filter(course=course).count()
+        result_completion_percentage = graded_students / total_students*100
 
         data.append({
             "course_id": course.id,
@@ -50,6 +55,7 @@ def get_teacher_dashboard(user):
             "total_students": total_students,
             "graded_students": graded_students,
             "result_completion": f"{graded_students}/{total_students}",
+            "result_completion_percentage": round(result_completion_percentage, 2),
         })
 
     return data
@@ -57,8 +63,8 @@ def get_teacher_dashboard(user):
 
 def get_headmaster_dashboard():
     courses = Course.objects.all().prefetch_related('result','course_enrollments').select_related('teacher')
-    total_students = StudentEnrollment.objects.values('student').distinct().count()
-    total_teachers = Course.objects.values('teacher').distinct().count()
+    total_students = User.objects.filter(is_student=True).count()
+    total_teachers = User.objects.filter(is_teacher=True).count()
     total_courses = courses.count()
 
     course_list = []
