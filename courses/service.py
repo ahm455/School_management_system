@@ -15,7 +15,7 @@ def get_course_analytics(course_id):
     return {
         "course_id": course_id,
         "course_name":course.name,
-        "course_teacher":course.teacher,
+        "course_teacher": course.teacher.full_name,
         "average_marks": average_marks,
         "top_performer": top.student.full_name if top else None,
         "top_score": top.total_marks if top else None,
@@ -31,5 +31,4 @@ def grade_submission(submission):
     if submission.graded:
         create_notification(
             user=submission.student,title=f"Assignment Graded {submission.assignment.course.name}",
-            message=f"Your assignment has been graded .You got {submission.marks}",type="Assignment"
-        )
+            message=f"Your assignment has been graded .You got {submission.marks}",type="Assignment")

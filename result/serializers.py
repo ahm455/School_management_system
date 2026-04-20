@@ -1,22 +1,28 @@
-from clerk_backend_api.models import totalcount
 from django.utils.timezone import now
 from rest_framework import serializers
 from services.constants import ResultChoices
-from courses.models import StudentEnrollment
+from courses.models import StudentEnrollment,Course
 from result.models import Result
 from services.service import ResultCalculator
+from accounts.serializers import *
+from courses.serializers import CourseMiniSerializer
 
 
 class ResultSerializer(serializers.ModelSerializer, ResultCalculator):
+    student = UserMiniSerializer(read_only=True)
+    course = CourseMiniSerializer(read_only=True)
+    student_id = serializers.PrimaryKeyRelatedField(queryset=User.objects.filter(is_student=True), write_only=True)
+    course_id = serializers.PrimaryKeyRelatedField(queryset=Course.objects.all(), write_only=True)
+
     class Meta:
         model = Result
-        fields = '__all__'
+        fields = "__all__"
         read_only_fields = ['total_marks','grade','status']
 
     def validate(self, data):
         instance = self.instance
-        course = data.get('course') or getattr(instance, 'course', None)
-        student = data.get('student') or getattr(instance, 'student', None)
+        student = data.get('student_id') or getattr(instance, 'student', None)
+        course = data.get('course_id') or getattr(instance, 'course', None)
 
         if not course:
             raise serializers.ValidationError("Course is required")
@@ -53,4 +59,11 @@ class ResultSerializer(serializers.ModelSerializer, ResultCalculator):
 
 
         return data
+
+    def create(self, validated_data):
+        course = validated_data.pop('course_id')
+        student = validated_data.pop('student_id')
+
+        return Result.objects.create(course=course,student=student,**validated_data)
+
 
