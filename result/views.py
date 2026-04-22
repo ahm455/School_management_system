@@ -1,10 +1,11 @@
+from typing import cast
 from rest_framework import generics
-from rest_framework.exceptions import PermissionDenied
-
+from rest_framework.exceptions import PermissionDenied, ValidationError
+from accounts.models import User
 from result.models import Result
 from result.serializers import ResultSerializer
 from .permissions import ResultPermission
-from accounts.constants import RolesChoices
+from .service import publish_result
 
 class ResultCreateList(generics.ListCreateAPIView):
     queryset = Result.objects.all()
@@ -12,26 +13,34 @@ class ResultCreateList(generics.ListCreateAPIView):
     permission_classes = [ResultPermission]
 
     def get_queryset(self):
-        user = self.request.user
-        role = getattr(user, 'role', None)
-        if role == RolesChoices.STUDENT:
+        user = cast(User, self.request.user)
+
+        if user.is_student:
             return Result.objects.filter(student=user)
-        elif role == RolesChoices.TEACHER:
-            return Result.objects.filter(course__teachers__teacher=user).distinct()
+
+        if user.is_teacher:
+            return Result.objects.filter(course__teacher=user)
+
         return Result.objects.all()
 
     def perform_create(self, serializer):
-        user = self.request.user
+        user = cast(User, self.request.user)
 
-        if user.role != RolesChoices.TEACHER:
+        if not user.is_teacher:
             raise PermissionDenied("Only teachers can create results")
 
-        course = serializer.validated_data.get("course")
+        course = serializer.validated_data.get("course_id")
 
-        if not course.teachers.filter(teacher=user).exists():
+        if not course:
+            raise ValidationError("Course is required")
+
+        if course.teacher != user:
             raise PermissionDenied("Not your course")
 
-        serializer.save()
+        result = serializer.save()
+        publish_result(result)
+
+
 class ResultRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
     queryset = Result.objects.all()
     serializer_class = ResultSerializer
@@ -39,10 +48,12 @@ class ResultRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [ResultPermission]
 
     def get_queryset(self):
-        user = self.request.user
-        role = getattr(user, 'role', None)
-        if role == RolesChoices.STUDENT:
+        user = cast(User, self.request.user)
+
+        if user.is_student:
             return Result.objects.filter(student=user)
-        elif role == RolesChoices.TEACHER:
-            return Result.objects.filter(course__teachers__teacher=user).distinct()
+
+        if user.is_teacher:
+            return Result.objects.filter(course__teacher=user)
+
         return Result.objects.all()

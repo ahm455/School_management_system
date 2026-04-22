@@ -18,7 +18,6 @@ from django.contrib import admin
 from django.urls import path,include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', TokenObtainPairView.as_view(), name='token_obtain_pair'),
@@ -27,4 +26,6 @@ urlpatterns = [
     path('courses/', include('courses.urls')),
     path('result/', include('result.urls')),
     path('attendance/', include('attendance.urls')),
+    path('dashboard/', include('dashboard.urls')),
+    path('notification/', include('notification.urls')),
 ]

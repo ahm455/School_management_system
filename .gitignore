@@ -58,4 +58,3 @@ dist/
 
 clerk_jwt_helper.py
 helper
-db.sqlite3

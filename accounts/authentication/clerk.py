@@ -3,7 +3,6 @@ import time
 from jose import jwt
 from jose.exceptions import JWTError, ExpiredSignatureError
 from rest_framework.exceptions import AuthenticationFailed
-
 from school_management.settings import CLERK_AUDIENCE, CLERK_DOMAIN
 
 
@@ -14,7 +13,7 @@ _jwks_last_fetched = 0
 def get_jwks():
     global _jwks_cache, _jwks_last_fetched
 
-    if _jwks_cache is None or time.time() - _jwks_last_fetched > 3600:
+    if _jwks_cache is None or time.time() - _jwks_last_fetched > 72000:
         response = requests.get(JWKS_URL, timeout=5)
         response.raise_for_status()
         _jwks_cache = response.json()

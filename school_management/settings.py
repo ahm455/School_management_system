@@ -28,6 +28,16 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 # Application definition
 
@@ -38,11 +48,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'accounts',
+    'accounts.apps.AccountsConfig',
     'courses',
     'result',
     'attendance',
-    'rest_framework'
+    'rest_framework',
+    'dashboard',
+    'notification',
 ]
 
 MIDDLEWARE = [
@@ -91,12 +103,22 @@ DATABASES = {
         'PORT': config('DB_PORT'),
     }
 }
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "accounts.authentication.auth.ClerkAuthentication",
     ),
 }
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
 
 CLERK_AUDIENCE = None
 CLERK_DOMAIN = config("CLERK_DOMAIN")
