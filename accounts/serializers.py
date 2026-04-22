@@ -22,3 +22,8 @@ class HeadmasterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Headmaster
         fields = '__all__'
+
+class UserMiniSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id','username','full_name']
