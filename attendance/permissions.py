@@ -1,7 +1,6 @@
 from typing import cast
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 from accounts.models import User
-from datetime import date
 
 
 class AttendancePermission(BasePermission):
@@ -33,9 +32,6 @@ class AttendancePermission(BasePermission):
         if user.is_teacher:
             if course.teacher != user:
                 return False
-
-            if obj.date != date.today():
-                return request.method in SAFE_METHODS
 
             return True
 

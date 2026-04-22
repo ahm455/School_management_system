@@ -1,6 +1,6 @@
 from typing import cast
 from rest_framework import generics
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from accounts.models import User
 from result.models import Result
 from result.serializers import ResultSerializer
@@ -29,13 +29,15 @@ class ResultCreateList(generics.ListCreateAPIView):
         if not user.is_teacher:
             raise PermissionDenied("Only teachers can create results")
 
-        course = serializer.validated_data.get("course")
+        course = serializer.validated_data.get("course_id")
 
+        if not course:
+            raise ValidationError("Course is required")
 
         if course.teacher != user:
             raise PermissionDenied("Not your course")
 
-        result=serializer.save()
+        result = serializer.save()
         publish_result(result)
 
 

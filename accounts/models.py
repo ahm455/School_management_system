@@ -3,7 +3,6 @@ from django.db import models
 from services.common import CreateUpdateTime
 from services.constants import SemesterChoices
 
-
 class User(CreateUpdateTime,AbstractUser):
     clerk_id = models.CharField(max_length=255, unique=True, blank=True,null=True)
     full_name=models.CharField(max_length=20)
@@ -20,7 +19,7 @@ class User(CreateUpdateTime,AbstractUser):
 
 class Student(CreateUpdateTime):
     user = models.OneToOneField(User, on_delete=models.CASCADE,related_name='student')
-    semester = models.CharField(choices=SemesterChoices,max_length=20,null=True,blank=True)
+    semester = models.CharField(choices=SemesterChoices,default=SemesterChoices.FIRST,max_length=20,null=True,blank=True)
 
     def __str__(self):
         return self.user.full_name
