@@ -1,5 +1,3 @@
-
-
 class ResultCalculator:
 
     def calculate_total_marks(self, course, instance=None, data=None):
@@ -21,12 +19,10 @@ class ResultCalculator:
         if final_marks is None:
             final_marks = getattr(instance, 'finalterm_marks', 0) or 0
 
-        total = (
-            (mid_marks * course.midterm_weightage / 100) +
-            (quiz_mark * course.quiz_weightage / 100) +
-            (assignment_mark * course.assignment_weightage / 100) +
-            (final_marks * course.finalterm_weightage / 100)
-        )
+        total = ((mid_marks * course.midterm_weightage / 50) +
+                (quiz_mark * course.quiz_weightage / 20) +
+                (assignment_mark * course.assignment_weightage / 20) +
+                (final_marks * course.finalterm_weightage / 100))
 
         return total
 
@@ -39,12 +35,8 @@ def get_course_analytics(course):
 
     return {
         "average_marks": results.aggregate(avg=Avg("total_marks"))["avg"],
-
         "top_performer": results.order_by("-total_marks").first(),
-
         "pass_count": results.filter(status=ResultChoices.PASS).count(),
-
         "fail_count": results.filter(status=ResultChoices.FAIL).count(),
-
         "total_students": results.count()
     }

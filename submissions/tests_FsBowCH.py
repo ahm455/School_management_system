@@ -211,7 +211,8 @@ class SubmissionTest(BaseTestCase):
                 "file": file
             }
 
-            response = self.client.post(self.create_url,data,format='multipart')
+            response = self.client.post(
+                            self.create_url,data,format='multipart')
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Submission.objects.count(), 1)

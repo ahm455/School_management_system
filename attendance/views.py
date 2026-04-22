@@ -29,7 +29,7 @@ class AttendanceCreateList(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         user = cast(User, self.request.user)
         course = serializer.validated_data.get("course")
-        student = serializer.validated_data.get("student")
+        student = serializer.validated_data.get("student_id")
 
         if course.teacher != user:
             raise PermissionDenied("Not your course")
@@ -37,7 +37,7 @@ class AttendanceCreateList(generics.ListCreateAPIView):
         if not course.course_enrollments.filter(student=student).exists():
             raise PermissionDenied("Student not enrolled in this course")
 
-        attendance = serializer.save()
+        attendance = serializer.save(student=student)
 
         if attendance.status == AttentanceChoices.ABSENT:
             mark_absent(attendance)
