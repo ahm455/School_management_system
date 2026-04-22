@@ -87,10 +87,15 @@ class AssignmentSerializer(serializers.ModelSerializer):
         course = validated_data.pop('course_id')
         return Assignment.objects.create(course=course, **validated_data)
 
+class AssignmentMiniSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Assignment
+        fields = ['name','description',"deadline"]
+
 
 class SubmissionSerializer(serializers.ModelSerializer):
     student = UserMiniSerializer(read_only=True)
-    assignment = AssignmentSerializer(read_only=True)
+    assignment = AssignmentMiniSerializer(read_only=True)
     assignment_id = serializers.PrimaryKeyRelatedField(queryset=Assignment.objects.all(),write_only=True)
 
     class Meta:
@@ -102,11 +107,9 @@ class SubmissionSerializer(serializers.ModelSerializer):
         assignment = validated_data.pop('assignment_id')
         return Submission.objects.create(assignment=assignment, **validated_data)
 
-
-
 class GradingAssignmentSerializer(serializers.ModelSerializer):
     student = UserMiniSerializer(read_only=True)
-    assignment = AssignmentSerializer(read_only=True)
+    assignment = AssignmentMiniSerializer(read_only=True)
 
     class Meta:
         model = Submission

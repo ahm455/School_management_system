@@ -1,3 +1,4 @@
+from rest_framework.test import APITestCase
 from rest_framework import status
 from django.urls import reverse
 from accounts.models import User, Student
@@ -48,8 +49,8 @@ class CourseTest(BaseTestCase):
         self.create_url = reverse('courses:Course_list_create')
 
         self.valid_data = {
-            "name": "Math46",
-            "code": "MTH103",
+            "name": "Math",
+            "code": "MTH101",
             "semester": SemesterChoices.FIRST,
             "teacher_id": self.teacher.id,
             "midterm_weightage": 30,
@@ -211,7 +212,8 @@ class SubmissionTest(BaseTestCase):
                 "file": file
             }
 
-            response = self.client.post(self.create_url,data,format='multipart')
+            response = self.client.post(
+                            self.create_url,data,format='multipart')
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Submission.objects.count(), 1)

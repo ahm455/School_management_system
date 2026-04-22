@@ -1,7 +1,6 @@
 from typing import cast
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 from accounts.models import User
-from datetime import date
 
 
 class AttendancePermission(BasePermission):

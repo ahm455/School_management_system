@@ -1,7 +1,7 @@
-from django.db.models import Avg, Count, Q
+from django.db.models import Avg
 from result.models import Result
 from services.constants import ResultChoices
-from courses.models import Course, Assignment
+from courses.models import Course
 from notification.service import create_notification
 
 def get_course_analytics(course_id):

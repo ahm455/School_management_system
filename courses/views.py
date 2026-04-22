@@ -41,7 +41,7 @@ class CourseRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
         user = cast(User, self.request.user)
 
         if user.is_student:
-            return Course.objects.filter(enrollments__student=user).distinct()
+            return Course.objects.filter(course_enrollments__student=user).distinct()
 
         if user.is_teacher:
             return Course.objects.filter(teacher=user)
@@ -68,7 +68,7 @@ class StudentEnrollmentCreateList(generics.ListCreateAPIView):
         user = cast(User, self.request.user)
 
         if user.is_student:
-            serializer.save(student=user)
+            serializer.save()
             return
 
         if user.is_teacher:

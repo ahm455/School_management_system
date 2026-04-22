@@ -72,7 +72,7 @@ def get_headmaster_dashboard():
     for course in courses:
         results = course.result.all()
         total_students_course = course.course_enrollments.count()
-        graded_students = results.values('student').distinct().count()
+        graded_students = course.result.filter(course=course).count()
 
         if total_students_course > 0 and graded_students > 0:
             completion_percentage = (
@@ -99,7 +99,6 @@ def get_headmaster_dashboard():
             "total_students_count": total_students_count,
             "pass_count": pass_count,
             "fail_count": fail_count,
-
         })
 
     return {

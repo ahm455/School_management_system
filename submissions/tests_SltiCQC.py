@@ -1,13 +1,10 @@
+from rest_framework.test import APITestCase
 from rest_framework import status
 from django.urls import reverse
 from accounts.models import User, Student
 from courses.models import *
-from rest_framework.test import APITestCase
-from django.urls import reverse
-from accounts.models import User
-from courses.models import Course, SemesterChoices
 
-class BaseTestCase(APITestCase):
+class CourseTest(APITestCase):
     def setUp(self):
         self.headmaster = User.objects.create_user(
             username="admin", password="123",
@@ -29,33 +26,13 @@ class BaseTestCase(APITestCase):
 
         self.student = self.student_user.student
 
-        self.course = Course.objects.create(
-            name="Math",
-            code="MTH101",
-            semester=SemesterChoices.FIRST,
-            teacher=self.teacher,
-            midterm_weightage=25,
-            quiz_weightage=25,
-            assignment_weightage=25,
-            finalterm_weightage=25
-        )
-
-
-class CourseTest(BaseTestCase):
-
-    def setUp(self):
-        super().setUp()
         self.create_url = reverse('courses:Course_list_create')
 
         self.valid_data = {
-            "name": "Math46",
-            "code": "MTH103",
-            "semester": SemesterChoices.FIRST,
-            "teacher_id": self.teacher.id,
-            "midterm_weightage": 30,
-            "quiz_weightage": 10,
-            "assignment_weightage": 10,
-            "finalterm_weightage": 50
+            "name": "Math","code": "MTH101",
+            "semester": SemesterChoices.FIRST,"teacher_id": self.teacher.id,
+            "midterm_weightage": 25,"quiz_weightage": 25,
+            "assignment_weightage": 25,"finalterm_weightage": 25
         }
 
     def test_headmaster_can_create_course(self):
@@ -82,7 +59,7 @@ class CourseTest(BaseTestCase):
 
     def test_headmaster_can_delete_course(self):
         course = Course.objects.create(
-            name="Math12",code="MTH101",
+            name="Math",code="MTH101",
             semester=SemesterChoices.FIRST,teacher=self.teacher,
             midterm_weightage=25,quiz_weightage=25,
             assignment_weightage=25,finalterm_weightage=25
@@ -97,7 +74,7 @@ class CourseTest(BaseTestCase):
 
     def test_student_cannot_delete_course(self):
         course = Course.objects.create(
-            name="Math31",code="MTH101",
+            name="Math",code="MTH101",
             semester=SemesterChoices.FIRST,teacher=self.teacher,
             midterm_weightage=25,quiz_weightage=25,
             assignment_weightage=25,finalterm_weightage=25
@@ -111,10 +88,30 @@ class CourseTest(BaseTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
-class EnrollmentTest(BaseTestCase):
+class EnrollmentTest(APITestCase):
 
     def setUp(self):
-        super().setUp()
+        self.teacher = User.objects.create_user(
+            username="teacher", password="123",
+            full_name="Teacher", email="teacher@test.com",
+            phone_number="03111111111", is_teacher=True
+        )
+
+        self.student_user = User.objects.create_user(
+            username="student", password="123",
+            full_name="Student", email="student@test.com",
+            phone_number="03222222222", is_student=True
+        )
+
+        self.student = self.student_user.student
+
+        self.course = Course.objects.create(
+            name="Math",code="MTH101",
+            semester=SemesterChoices.FIRST,teacher=self.teacher,
+            midterm_weightage=25,quiz_weightage=25,
+            assignment_weightage=25,finalterm_weightage=25
+        )
+
         self.create_url = reverse('courses:Enrollment_list_create')
 
     def test_student_can_enroll(self):
@@ -144,12 +141,23 @@ class EnrollmentTest(BaseTestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
 
-class AssignmentTest(BaseTestCase):
+class AssignmentTest(APITestCase):
 
     def setUp(self):
-        super().setUp()
-        self.url = reverse('courses:Assignment_list_create')
+        self.teacher = User.objects.create_user(
+            username="teacher", password="123",
+            full_name="Teacher", email="teacher@test.com",
+            phone_number="03111111111", is_teacher=True
+        )
 
+        self.course = Course.objects.create(
+            name="Math",code="MTH101",
+            semester=SemesterChoices.FIRST,teacher=self.teacher,
+            midterm_weightage=25,quiz_weightage=25,
+            assignment_weightage=25,finalterm_weightage=25
+        )
+
+        self.url = reverse('courses:Assignment_list_create')
 
     def test_teacher_can_create_assignment(self):
         self.client.force_authenticate(user=self.teacher)
@@ -182,12 +190,31 @@ class AssignmentTest(BaseTestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
 
-class SubmissionTest(BaseTestCase):
+class SubmissionTest(APITestCase):
 
     def setUp(self):
-        super().setUp()
+        self.teacher = User.objects.create_user(
+            username="teacher", password="123",
+            full_name="Teacher", email="teacher@test.com",
+            phone_number="03111111111", is_teacher=True
+        )
+
+        self.student_user = User.objects.create_user(
+            username="student", password="123",
+            full_name="Student", email="student@test.com",
+            phone_number="03222222222", is_student=True
+        )
+
+        self.student = self.student_user.student
+
+        self.course = Course.objects.create(
+            name="Math",code="MTH101",semester=SemesterChoices.FIRST,
+            teacher=self.teacher,midterm_weightage=25,
+            quiz_weightage=25,assignment_weightage=25,finalterm_weightage=25
+        )
+
         StudentEnrollment.objects.create(
-            student=self.student_user,
+            student=self.student_user ,
             course=self.course
         )
 
@@ -201,7 +228,6 @@ class SubmissionTest(BaseTestCase):
 
         self.create_url = reverse('courses:Submission_list_create')
 
-
     def test_student_can_submit_assignment(self):
         self.client.force_authenticate(user=self.student_user)
 
@@ -211,7 +237,8 @@ class SubmissionTest(BaseTestCase):
                 "file": file
             }
 
-            response = self.client.post(self.create_url,data,format='multipart')
+            response = self.client.post(
+                            self.create_url,data,format='multipart')
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Submission.objects.count(), 1)
